@@ -9,7 +9,7 @@ on:
 jobs:
 # JOB 1: TEST BACKEND
   backend-test:
-    # We stick to 22.04 because it is stable and supports the download
+    # We stick to ubuntu-22.04 (Safe, works with downloads)
     runs-on: ubuntu-22.04
     
     defaults:
@@ -31,18 +31,18 @@ jobs:
         npm install --save-dev mongodb-memory-server
     
     - name: Run Backend Tests
-      # We still use the 60s timeout to be safe
+      # 60s timeout overrides the command line, but your code has a hardcoded 30s limit.
+      # If this fails on timeout again, we might need to patch your file, but let's try v4 first.
       run: npx jest --testTimeout=60000 --detectOpenHandles --forceExit
       env:
-        # 🛠️ THE GOLDEN TICKET: Force MongoDB 5.0
-        # This version is compatible with your older Mongoose code
-        MONGOMS_VERSION: '5.0.14'
+        # 🛠️ FINAL FIX: MongoDB 4.4
+        # This is the last version that fully supports old Mongoose syntax.
+        MONGOMS_VERSION: '4.4.18'
         
         INTASEND_PUBLISHABLE_KEY: test_pub_key
         INTASEND_SECRET_KEY: test_secret_key
         INTASEND_IS_TEST: true
         JWT_SECRET: test_jwt_secret
-
 
   # JOB 2: TEST FRONTEND
   frontend-test:

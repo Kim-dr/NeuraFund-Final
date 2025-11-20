@@ -7,11 +7,9 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-# JOB 1: TEST BACKEND
+  # JOB 1: TEST BACKEND
   backend-test:
-    # We stick to ubuntu-22.04 (Safe, works with downloads)
     runs-on: ubuntu-22.04
-    
     defaults:
       run:
         working-directory: ./Backend
@@ -28,17 +26,29 @@ jobs:
       run: |
         npm install
         npm install --save-dev cross-env
-        npm install --save-dev mongodb-memory-server
+        # FIX 1: Pin to version 8. This version is more reliable for older projects.
+        npm install --save-dev mongodb-memory-server@8.15.1
     
+    # FIX 2: PRE-DOWNLOAD MONGODB
+    # This tricks the system into downloading the DB before the 30s timer starts.
+    - name: Pre-download MongoDB Binary
+      run: |
+        node -e '
+          const { MongoMemoryServer } = require("mongodb-memory-server");
+          console.log("Starting pre-download of MongoDB 4.4.18...");
+          MongoMemoryServer.create({ binary: { version: "4.4.18" } })
+            .then(m => { console.log("Download complete!"); m.stop(); })
+            .catch(e => { console.error(e); process.exit(1); });
+        '
+      env:
+        MONGOMS_VERSION: '4.4.18'
+
     - name: Run Backend Tests
-      # 60s timeout overrides the command line, but your code has a hardcoded 30s limit.
-      # If this fails on timeout again, we might need to patch your file, but let's try v4 first.
+      # Now that the binary is cached, this will start instantly and pass the timeout.
       run: npx jest --testTimeout=60000 --detectOpenHandles --forceExit
       env:
-        # 🛠️ FINAL FIX: MongoDB 4.4
-        # This is the last version that fully supports old Mongoose syntax.
+        # FIX 3: Force compatibility mode
         MONGOMS_VERSION: '4.4.18'
-        
         INTASEND_PUBLISHABLE_KEY: test_pub_key
         INTASEND_SECRET_KEY: test_secret_key
         INTASEND_IS_TEST: true

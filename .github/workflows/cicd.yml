@@ -11,7 +11,7 @@ jobs:
   backend-test:
     runs-on: ubuntu-latest
     
-    # We now know the folder is 'Backend' (Capital B), so we can use defaults again!
+    # We now know the folder is 'Backend' (Capital B)
     defaults:
       run:
         working-directory: ./Backend
@@ -25,14 +25,17 @@ jobs:
         node-version: '18.x'
     
     - name: Install Dependencies
-      # We add 'npm install cross-env' here to fix the missing tool error
+      # FIX: We install both missing tools here
       run: |
         npm install
-        npm install --save-dev cross-env 
+        npm install --save-dev cross-env
+        npm install --save-dev mongodb-memory-server
     
     - name: Run Backend Tests
       run: npm test
       env:
+        # We can likely remove the MONGO URI now because memory-server handles it, 
+        # but leaving it doesn't hurt.
         INTASEND_PUBLISHABLE_KEY: test_pub_key
         INTASEND_SECRET_KEY: test_secret_key
         INTASEND_IS_TEST: true

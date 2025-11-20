@@ -10,9 +10,20 @@ jobs:
   # JOB 1: TEST BACKEND
   backend-test:
     runs-on: ubuntu-22.04
+    
     defaults:
       run:
         working-directory: ./Backend
+
+    # 🛠️ GLOBAL FIX: We set these variables for the WHOLE JOB
+    # This ensures both the download step AND the test step look in the same place.
+    env:
+      MONGOMS_VERSION: '4.4.18'                   # Force the version that works with your code
+      MONGOMS_DOWNLOAD_DIR: ${{ github.workspace }}/Backend/mongodb_binaries  # Force a specific folder
+      INTASEND_PUBLISHABLE_KEY: test_pub_key
+      INTASEND_SECRET_KEY: test_secret_key
+      INTASEND_IS_TEST: true
+      JWT_SECRET: test_jwt_secret
 
     steps:
     - uses: actions/checkout@v3
@@ -26,33 +37,26 @@ jobs:
       run: |
         npm install
         npm install --save-dev cross-env
-        # FIX 1: Pin to version 8. This version is more reliable for older projects.
+        # We use version 8 for stability
         npm install --save-dev mongodb-memory-server@8.15.1
     
-    # FIX 2: PRE-DOWNLOAD MONGODB
-    # This tricks the system into downloading the DB before the 30s timer starts.
-    - name: Pre-download MongoDB Binary
+    # 🛠️ STEP 1: Create the folder and download the DB explicitly
+    - name: Pre-download MongoDB
       run: |
+        mkdir -p $MONGOMS_DOWNLOAD_DIR
         node -e '
           const { MongoMemoryServer } = require("mongodb-memory-server");
-          console.log("Starting pre-download of MongoDB 4.4.18...");
+          console.log("Pre-downloading MongoDB 4.4.18...");
           MongoMemoryServer.create({ binary: { version: "4.4.18" } })
-            .then(m => { console.log("Download complete!"); m.stop(); })
-            .catch(e => { console.error(e); process.exit(1); });
+            .then(m => { console.log("Done!"); m.stop(); })
+            .catch(err => { console.error(err); process.exit(1); });
         '
-      env:
-        MONGOMS_VERSION: '4.4.18'
 
+    # 🛠️ STEP 2: Run Tests (Now instant startup!)
     - name: Run Backend Tests
-      # Now that the binary is cached, this will start instantly and pass the timeout.
+      # The DB is already in the folder, so this will start in <1 second.
       run: npx jest --testTimeout=60000 --detectOpenHandles --forceExit
-      env:
-        # FIX 3: Force compatibility mode
-        MONGOMS_VERSION: '4.4.18'
-        INTASEND_PUBLISHABLE_KEY: test_pub_key
-        INTASEND_SECRET_KEY: test_secret_key
-        INTASEND_IS_TEST: true
-        JWT_SECRET: test_jwt_secret
+
 
   # JOB 2: TEST FRONTEND
   frontend-test:

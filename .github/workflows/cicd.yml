@@ -1,73 +1,3 @@
-# name: NeuraFund CI/CD Pipeline
-
-# on:
-#   push:
-#     branches: [ "main", "master" ]
-#   pull_request:
-#     branches: [ "main", "master" ]
-
-# jobs:
-#   # JOB 1: TEST BACKEND
-#   backend-test:
-#     runs-on: ubuntu-latest
-#     defaults:
-#       run:
-#         # 🛠️ FIX: Capital 'B' because you renamed it in Git
-#         working-directory: ./Backend
-
-#     steps:
-#     - uses: actions/checkout@v3
-#     - name: Use Node.js
-#       uses: actions/setup-node@v3
-#       with:
-#         node-version: '18.x'
-    
-#     - name: Install Dependencies
-#       run: npm install
-    
-#     - name: Run Backend Tests
-#       run: npm test
-#       env:
-#         INTASEND_PUBLISHABLE_KEY: test_pub_key
-#         INTASEND_SECRET_KEY: test_secret_key
-#         INTASEND_IS_TEST: true
-#         JWT_SECRET: test_jwt_secret
-#         MONGODB_URI: mongodb://localhost:27017/test_db
-
-#   # JOB 2: TEST FRONTEND
-#   frontend-test:
-#     runs-on: ubuntu-latest
-#     defaults:
-#       run:
-#         # 🛠️ FIX: Capital 'F' to match your project structure
-#         working-directory: ./Frontend
-
-#     steps:
-#     - uses: actions/checkout@v3
-#     - name: Use Node.js
-#       uses: actions/setup-node@v3
-#       with:
-#         node-version: '18.x'
-        
-#     - name: Install Dependencies
-#       run: npm install
-      
-#     - name: Run Frontend Unit Tests
-#       run: npm test
-#       env:
-#         CI: true
-
-#   # JOB 3: DEPLOY BACKEND (CD)
-#   # Keep commented out until your partner adds the secret
-#   # deploy-backend:
-#   #   needs: [backend-test, frontend-test]
-#   #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-#   #   runs-on: ubuntu-latest
-#   #   steps:
-#   #     - name: Trigger Render Deployment
-#   #       run: curl "${{ secrets.RENDER_DEPLOY_HOOK }}"
-
-
 name: NeuraFund CI/CD Pipeline
 
 on:
@@ -80,11 +10,6 @@ jobs:
   # JOB 1: TEST BACKEND
   backend-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        # 🛠️ FIX: Using Capital 'B' to match your Git rename
-        working-directory: ./Backend
-
     steps:
     - uses: actions/checkout@v3
     
@@ -93,11 +18,16 @@ jobs:
       with:
         node-version: '18.x'
     
+    # 🛠️ FIX: Using shell 'cd' with wildcard [Bb] to find the folder regardless of case
     - name: Install Dependencies
-      run: npm install
+      run: |
+        cd [Bb]ackend
+        npm install
     
     - name: Run Backend Tests
-      run: npm test
+      run: |
+        cd [Bb]ackend
+        npm test
       env:
         INTASEND_PUBLISHABLE_KEY: test_pub_key
         INTASEND_SECRET_KEY: test_secret_key
@@ -108,12 +38,6 @@ jobs:
   # JOB 2: TEST FRONTEND
   frontend-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        # 🛠️ FIX: Using Capital 'F' (Assuming you renamed Frontend too, or it was already Capital)
-        # If this fails, try changing this specific line to './frontend'
-        working-directory: ./Frontend
-
     steps:
     - uses: actions/checkout@v3
     - name: Use Node.js
@@ -121,16 +45,21 @@ jobs:
       with:
         node-version: '18.x'
         
+    # 🛠️ FIX: Same wildcard strategy for Frontend
     - name: Install Dependencies
-      run: npm install
+      run: |
+        cd [Ff]rontend
+        npm install
       
     - name: Run Frontend Unit Tests
-      run: npm test
+      run: |
+        cd [Ff]rontend
+        npm test
       env:
         CI: true
 
   # JOB 3: DEPLOY BACKEND (CD)
-  # Keep commented out until your partner adds the secret
+  # Commented out until secret is added
   # deploy-backend:
   #   needs: [backend-test, frontend-test]
   #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'

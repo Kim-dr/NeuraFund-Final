@@ -10,7 +10,11 @@ jobs:
   # JOB 1: TEST BACKEND
   backend-test:
     runs-on: ubuntu-latest
-    # 🛑 REMOVED 'defaults'. We will navigate manually to be safe.
+    
+    # Define the directory for all steps in this job
+    defaults:
+      run:
+        working-directory: ./Backend  # <--- CHECK THIS SPELLING CAREFULLY
     
     steps:
     - uses: actions/checkout@v3
@@ -20,18 +24,15 @@ jobs:
       with:
         node-version: '18.x'
     
-    # 🛠️ FIX: Dynamic Navigation
+    # Add this debug step to see exactly what GitHub sees
+    - name: List Files (Debug)
+      run: ls -la
+    
     - name: Install Dependencies
-      run: |
-        # This command finds 'Backend' or 'backend' and enters it automatically
-        cd $(ls -d [Bb]ackend)
-        npm install
+      run: npm install
     
     - name: Run Backend Tests
-      run: |
-        # Same dynamic navigation for the test step
-        cd $(ls -d [Bb]ackend)
-        npm test
+      run: npm test
       env:
         INTASEND_PUBLISHABLE_KEY: test_pub_key
         INTASEND_SECRET_KEY: test_secret_key

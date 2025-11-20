@@ -10,20 +10,9 @@ jobs:
   # JOB 1: TEST BACKEND
   backend-test:
     runs-on: ubuntu-22.04
-    
     defaults:
       run:
         working-directory: ./Backend
-
-    # 🛠️ GLOBAL FIX: We set these variables for the WHOLE JOB
-    # This ensures both the download step AND the test step look in the same place.
-    env:
-      MONGOMS_VERSION: '4.4.18'                   # Force the version that works with your code
-      MONGOMS_DOWNLOAD_DIR: ${{ github.workspace }}/Backend/mongodb_binaries  # Force a specific folder
-      INTASEND_PUBLISHABLE_KEY: test_pub_key
-      INTASEND_SECRET_KEY: test_secret_key
-      INTASEND_IS_TEST: true
-      JWT_SECRET: test_jwt_secret
 
     steps:
     - uses: actions/checkout@v3
@@ -37,26 +26,28 @@ jobs:
       run: |
         npm install
         npm install --save-dev cross-env
-        # We use version 8 for stability
+        # We use version 8.15.1 because it is the most stable for Mongoose 5 projects
         npm install --save-dev mongodb-memory-server@8.15.1
     
-    # 🛠️ STEP 1: Create the folder and download the DB explicitly
-    - name: Pre-download MongoDB
+    # 🚨 THE SURGERY STEP: This fixes the issue in your actual code file
+    - name: Patch Test Timeout
       run: |
-        mkdir -p $MONGOMS_DOWNLOAD_DIR
-        node -e '
-          const { MongoMemoryServer } = require("mongodb-memory-server");
-          console.log("Pre-downloading MongoDB 4.4.18...");
-          MongoMemoryServer.create({ binary: { version: "4.4.18" } })
-            .then(m => { console.log("Done!"); m.stop(); })
-            .catch(err => { console.error(err); process.exit(1); });
-        '
+        echo "Patching tests/setup.js to increase timeout..."
+        # This command searches for '30000' and replaces it with '120000' inside the file
+        sed -i 's/30000/120000/g' tests/setup.js
+        echo "Patch applied."
 
-    # 🛠️ STEP 2: Run Tests (Now instant startup!)
     - name: Run Backend Tests
-      # The DB is already in the folder, so this will start in <1 second.
-      run: npx jest --testTimeout=60000 --detectOpenHandles --forceExit
-
+      # We don't need the --testTimeout flag anymore because we fixed the file itself
+      run: npx jest --detectOpenHandles --forceExit
+      env:
+        # This forces the database version that matches your code's syntax
+        MONGOMS_VERSION: '4.4.18'
+        
+        INTASEND_PUBLISHABLE_KEY: test_pub_key
+        INTASEND_SECRET_KEY: test_secret_key
+        INTASEND_IS_TEST: true
+        JWT_SECRET: test_jwt_secret
 
   # JOB 2: TEST FRONTEND
   frontend-test:

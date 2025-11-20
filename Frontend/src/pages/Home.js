@@ -56,6 +56,18 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      {/* --- DUMMY FOOTER FOR INTASEND VERIFICATION --- */}
+      <footer style={{ marginTop: '4rem', borderTop: '1px solid #eee', padding: '2rem 0', textAlign: 'center', color: '#666' }}>
+        <p>
+          &copy; 2025 NeuraFund. All rights reserved.
+          <br />
+          <a href="#" style={{ color: '#3498db', textDecoration: 'none', margin: '0 10px' }}>Terms of Service</a>
+          |
+          <a href="#" style={{ color: '#3498db', textDecoration: 'none', margin: '0 10px' }}>Privacy Policy</a>
+        </p>
+      </footer>
+
     </div>
   );
 };

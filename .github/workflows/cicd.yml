@@ -7,9 +7,9 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  # JOB 1: TEST BACKEND
+# JOB 1: TEST BACKEND
   backend-test:
-    # FIX: We pin this to 'ubuntu-22.04' because the DB tool fails on the newer ubuntu-latest
+    # We stick to 22.04 because it is stable and supports the download
     runs-on: ubuntu-22.04
     
     defaults:
@@ -25,20 +25,24 @@ jobs:
         node-version: '18.x'
     
     - name: Install Dependencies
-      # We stick with the standard install now that we fixed the OS version
       run: |
         npm install
         npm install --save-dev cross-env
         npm install --save-dev mongodb-memory-server
     
     - name: Run Backend Tests
-      # We keep the timeout increase just to be safe
+      # We still use the 60s timeout to be safe
       run: npx jest --testTimeout=60000 --detectOpenHandles --forceExit
       env:
+        # 🛠️ THE GOLDEN TICKET: Force MongoDB 5.0
+        # This version is compatible with your older Mongoose code
+        MONGOMS_VERSION: '5.0.14'
+        
         INTASEND_PUBLISHABLE_KEY: test_pub_key
         INTASEND_SECRET_KEY: test_secret_key
         INTASEND_IS_TEST: true
         JWT_SECRET: test_jwt_secret
+
 
   # JOB 2: TEST FRONTEND
   frontend-test:

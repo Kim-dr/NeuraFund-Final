@@ -10,6 +10,11 @@ jobs:
   # JOB 1: TEST BACKEND
   backend-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        # 🛠️ FIX: Matching the Capital 'B' from your logs
+        working-directory: ./Backend
+
     steps:
     - uses: actions/checkout@v3
     
@@ -18,16 +23,11 @@ jobs:
       with:
         node-version: '18.x'
     
-    # 🛠️ FIX: Using shell 'cd' with wildcard [Bb] to find the folder regardless of case
     - name: Install Dependencies
-      run: |
-        cd [Bb]ackend
-        npm install
+      run: npm install
     
     - name: Run Backend Tests
-      run: |
-        cd [Bb]ackend
-        npm test
+      run: npm test
       env:
         INTASEND_PUBLISHABLE_KEY: test_pub_key
         INTASEND_SECRET_KEY: test_secret_key
@@ -38,6 +38,11 @@ jobs:
   # JOB 2: TEST FRONTEND
   frontend-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        # 🛠️ FIX: Matching the Capital 'F' from your logs
+        working-directory: ./Frontend
+
     steps:
     - uses: actions/checkout@v3
     - name: Use Node.js
@@ -45,21 +50,16 @@ jobs:
       with:
         node-version: '18.x'
         
-    # 🛠️ FIX: Same wildcard strategy for Frontend
     - name: Install Dependencies
-      run: |
-        cd [Ff]rontend
-        npm install
+      run: npm install
       
     - name: Run Frontend Unit Tests
-      run: |
-        cd [Ff]rontend
-        npm test
+      run: npm test
       env:
         CI: true
 
   # JOB 3: DEPLOY BACKEND (CD)
-  # Commented out until secret is added
+  # Commented out until your partner adds the secret
   # deploy-backend:
   #   needs: [backend-test, frontend-test]
   #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'

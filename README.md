@@ -2,8 +2,8 @@
 
 A full-stack MERN platform connecting university students with local vendors for quick micro-tasks, real-time communication, and instant M-Pesa payments.
 
-**🚀 Live Demo:** [neurafund.vercel.app](https://neurafund.vercel.app)  
-**📚 API Docs:** [api.neurafund.com/api](https://api.neurafund.com/api)  
+**🚀 Live Demo:** [neurafund.vercel.app](https://neura-fund-final.vercel.app/)  
+**📚 API Docs:** [api.neurafund.com/api](https://neurafund-final.onrender.com//api)  
 **🎥 Demo Videos:** [View Playlist](https://www.loom.com/share/11503be2f976458e80776834913ecc57)  
 **📸 Screenshots:** [View Gallery](./screenshots/README.md)
 

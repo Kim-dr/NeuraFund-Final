@@ -9,7 +9,19 @@ A full-stack MERN platform connecting university students with local vendors for
 **🎥 Demo Videos:** [View Playlist](https://www.loom.com/share/11503be2f976458e80776834913ecc57)  
 **📸 Screenshots:** [View Gallery](./screenshots/README.md)
 ---
+## ⚠️ Important Testing Instructions
 
+**Please read before testing:**
+This application enforces strict **Role-Based Access Control (RBAC)** via secure session tokens. To prevent session conflicts when testing real-time interactions between a **Student** and a **Vendor**, please follow this setup:
+
+> **Do not log in as both users in the same browser window.** Doing so will overwrite the session token and cause `403 Forbidden` errors.
+
+### ✅ Recommended Testing Setup
+1.  Open the app in your **Normal Browser** and log in as a **Vendor**.
+2.  Open a **New Incognito/Private Window** (`Ctrl + Shift + N`) and log in as a **Student**.
+3.  Place the windows side-by-side to verify real-time updates (Chat, Task Status, Notifications).
+
+   ---
 ## Table of Contents
 
 - [Overview](#overview)

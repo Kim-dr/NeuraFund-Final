@@ -4,7 +4,7 @@ A full-stack MERN platform connecting university students with local vendors for
 
 **🚀 Live Demo:** [neurafund.vercel.app](https://neurafund.vercel.app)  
 **📚 API Docs:** [api.neurafund.com/api](https://api.neurafund.com/api)  
-**🎥 Demo Videos:** [View Playlist](https://youtube.com/playlist?list=PLxxx)  - to be created soon !!
+**🎥 Demo Videos:** [View Playlist](https://www.loom.com/share/11503be2f976458e80776834913ecc57)  
 **📸 Screenshots:** [View Gallery](./screenshots/README.md)
 
 ---
@@ -332,7 +332,7 @@ neurafund/
 
 ---
 
-## 🎬 Demo Videos
+## 🎬 Demo Videos -- everything is showcased in the demo video above 
 
 Consider recording and adding these video demonstrations:
 
@@ -798,8 +798,8 @@ IntaSend           - Payment provider
 #### 1. Clone Repository
 
 ```bash
-git clone https://github.com/Sheilatine/FinalProject.git
-cd neurafund
+git clone https://github.com/Kim-dr/NeuraFund-Final.git
+cd NeuraFund-Final
 ```
 
 #### 2. Backend Setup

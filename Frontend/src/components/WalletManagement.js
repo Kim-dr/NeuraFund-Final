@@ -9,16 +9,18 @@ const WalletManagement = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  // Separate states for Deposit and Withdraw to avoid confusion
   const [depositAmount, setDepositAmount] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [depositPhoneNumber, setDepositPhoneNumber] = useState(''); 
   
-  // 🛠️ Shared state for phone number (used by both Deposit and Withdraw)
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawPhoneNumber, setWithdrawPhoneNumber] = useState('');
   
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    refreshUser();
+    // Force refresh global user data on load to fix Navbar sync
+    if (refreshUser) refreshUser();
     fetchWalletData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
@@ -30,9 +32,11 @@ const WalletManagement = () => {
         api.get('/wallet/balance'),
         api.get('/wallet/transactions'),
       ]);
-      setBalance(balanceRes.data.data.balance);
-      setTransactions(transactionsRes.data.data.transactions);
+      // Safely access the nested data
+      setBalance(balanceRes.data?.data?.balance || 0);
+      setTransactions(transactionsRes.data?.data?.transactions || []);
     } catch (error) {
+      console.error("Wallet Load Error:", error);
       showToast('Failed to load wallet data', 'error');
     } finally {
       setLoading(false);
@@ -41,34 +45,50 @@ const WalletManagement = () => {
 
   const handleDeposit = async (e) => {
     e.preventDefault();
+    
+    // 1. Validation: Ensure we check 'depositPhoneNumber', NOT 'phoneNumber'
     if (!depositAmount || parseFloat(depositAmount) <= 0) {
       showToast('Please enter a valid amount', 'error');
       return;
     }
-    // 🛠️ Validate Phone for Deposit too
-    if (!phoneNumber || !/^254\d{9}$/.test(phoneNumber)) {
+    if (!depositPhoneNumber || !/^254\d{9}$/.test(depositPhoneNumber)) {
         showToast('Please enter a valid M-Pesa number (254XXXXXXXXX)', 'error');
         return;
     }
 
     setProcessing(true);
     try {
+      console.log("Sending Deposit Request...");
       const response = await api.post('/wallet/deposit', {
         amount: parseFloat(depositAmount),
-        phoneNumber: phoneNumber, // 🛠️ Send Phone Number
-        paymentMethod: 'M-Pesa',
+        phoneNumber: depositPhoneNumber, 
+        paymentMethod: 'mock-mpesa',
       });
       
-      const newBalance = response.data.data.transaction.newBalance; 
-      updateUserBalance(newBalance); 
-      
-      showToast('STK Push Sent! Check your phone.', 'success');
-      setDepositAmount('');
-      setPhoneNumber(''); // Clear phone after success
-      
-      fetchWalletData();
+      console.log("Deposit Response:", response.data);
+
+      // 2. Success Handling
+      if (response.data.success) {
+          // Safely update balance if provided
+          const newBalance = response.data.data?.transaction?.newBalance;
+          if (newBalance !== undefined && updateUserBalance) {
+              updateUserBalance(newBalance); 
+          }
+          
+          showToast('STK Push Sent! Check your phone.', 'success');
+          setDepositAmount('');
+          setDepositPhoneNumber('');
+          
+          // Refresh list
+          fetchWalletData();
+      } else {
+          throw new Error(response.data.error?.message || "Unknown error");
+      }
+
     } catch (error) {
-      showToast(error.response?.data?.message || 'Deposit failed', 'error');
+      console.error("Deposit Failed:", error);
+      const msg = error.response?.data?.error?.message || error.message || 'Deposit failed';
+      showToast(msg, 'error');
     } finally {
       setProcessing(false);
     }
@@ -80,7 +100,7 @@ const WalletManagement = () => {
       showToast('Please enter a valid amount', 'error');
       return;
     }
-    if (!phoneNumber || !/^254\d{9}$/.test(phoneNumber)) {
+    if (!withdrawPhoneNumber || !/^254\d{9}$/.test(withdrawPhoneNumber)) {
       showToast('Please enter a valid M-Pesa number (254XXXXXXXXX)', 'error');
       return;
     }
@@ -89,19 +109,25 @@ const WalletManagement = () => {
     try {
       const response = await api.post('/wallet/withdraw', {
         amount: parseFloat(withdrawAmount),
-        phoneNumber,
+        phoneNumber: withdrawPhoneNumber,
       });
       
-      // Update balance immediately for Withdraw too
-      const newBalance = response.data.data.transaction.newBalance;
-      updateUserBalance(newBalance);
+      if (response.data.success) {
+          const newBalance = response.data.data?.transaction?.newBalance;
+          if (newBalance !== undefined && updateUserBalance) {
+              updateUserBalance(newBalance);
+          }
 
-      showToast('Withdrawal successful! Check your M-Pesa.', 'success');
-      setWithdrawAmount('');
-      setPhoneNumber('');
-      fetchWalletData();
+          showToast('Withdrawal successful! Check your M-Pesa.', 'success');
+          setWithdrawAmount('');
+          setWithdrawPhoneNumber('');
+          fetchWalletData();
+      }
+
     } catch (error) {
-      showToast(error.response?.data?.message || 'Withdrawal failed', 'error');
+      console.error("Withdrawal Failed:", error);
+      const msg = error.response?.data?.error?.message || 'Withdrawal failed';
+      showToast(msg, 'error');
     } finally {
       setProcessing(false);
     }
@@ -139,19 +165,18 @@ const WalletManagement = () => {
                   required
                 />
               </div>
-              {/* 🛠️ ADDED PHONE INPUT FOR VENDOR */}
               <div className="form-group">
-                <label>M-Pesa Number</label>
+                <label>M-Pesa Phone Number (254...)</label>
                 <input
                   type="text"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  value={depositPhoneNumber}
+                  onChange={(e) => setDepositPhoneNumber(e.target.value)}
                   placeholder="2547XXXXXXXX"
                   pattern="254\d{9}"
                   required
                 />
-                <small>Format: 254712345678</small>
               </div>
+
               <button type="submit" className="btn btn-primary" disabled={processing}>
                 {processing ? 'Sending Request...' : 'Deposit'}
               </button>
@@ -180,13 +205,12 @@ const WalletManagement = () => {
                 <label>M-Pesa Number</label>
                 <input
                   type="text"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  value={withdrawPhoneNumber}
+                  onChange={(e) => setWithdrawPhoneNumber(e.target.value)}
                   placeholder="2547XXXXXXXX"
                   pattern="254\d{9}"
                   required
                 />
-                <small>Format: 254712345678</small>
               </div>
               <button type="submit" className="btn btn-success" disabled={processing}>
                 {processing ? 'Processing...' : 'Withdraw'}
